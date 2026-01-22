@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canlı TV Player</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#0f0f0f;
+    color:#fff;
+}
+
+header{
+    background:#1a73e8;
+    padding:15px;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+}
+
+.container{
+    padding:15px;
+}
+
+/* PLAYER */
+.player-wrapper{
+    background:#000;
+    border-radius:12px;
+    overflow:hidden;
+}
+
+.player-screen{
+    position:relative;
+    width:100%;
+    height:56.25vw;
+    max-height:500px;
+    background:#000;
+}
+
+#streamContainer iframe{
+    width:100%;
+    height:100%;
+    border:none;
+}
+
+#placeholder{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    color:#888;
+    font-size:18px;
+}
+
+#placeholder i{
+    font-size:64px;
+    margin-bottom:10px;
+}
+
+/* BUTTONS */
+.section{
+    margin-top:20px;
+}
+
+.section h2{
+    margin:10px 0;
+    font-size:18px;
+}
+
+.buttons{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+button{
+    padding:12px 16px;
+    border:none;
+    border-radius:8px;
+    background:#1a73e8;
+    color:#fff;
+    font-size:15px;
+    cursor:pointer;
+}
+
+button:active{
+    transform:scale(0.97);
+}
+
+/* FOOTER */
+footer{
+    text-align:center;
+    padding:10px;
+    font-size:12px;
+    color:#666;
+}
+</style>
+</head>
+
+<body>
+
+<header>📺 Canlı TV Player</header>
+
+<div class="container">
+
+    <div class="player-wrapper">
+        <div class="player-screen">
+            <div id="placeholder">
+                <i class="fas fa-play-circle"></i>
+                <div>Kanal seç</div>
+            </div>
+            <div id="streamContainer"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>SPOR</h2>
+        <div class="buttons">
+            <button onclick="loadChannel(62,'beIN SPORTS 1')">beIN SPORTS 1</button>
+            <button onclick="loadChannel(63,'beIN SPORTS 2')">beIN SPORTS 2</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>ULUSAL</h2>
+        <div class="buttons">
+            <button onclick="loadChannel(1000,'ATV')">ATV</button>
+            <button onclick="loadChannel(1001,'KANAL D')">KANAL D</button>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    GitHub Pages uyumlu • Mobil destekli
+</footer>
+
+<script>
+function loadChannel(id,name){
+    const placeholder = document.getElementById("placeholder");
+    const container = document.getElementById("streamContainer");
+
+    placeholder.style.display = "none";
+    container.innerHTML = "";
+
+    const iframe = document.createElement("iframe");
+    iframe.src = "https://daddyhd.com/stream/stream-" + id + ".php";
+    iframe.allow = "autoplay; fullscreen; picture-in-picture";
+    iframe.allowFullscreen = true;
+    iframe.setAttribute("playsinline","true");
+
+    container.appendChild(iframe);
+}
+</script>
+
+</body>
+</html>
