@@ -11,47 +11,67 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #0f172a;
+  background: #020617;
   color: white;
 }
 header {
-  padding: 12px;
-  text-align: center;
+  padding: 10px;
   background: #020617;
+  text-align: center;
   font-size: 20px;
   font-weight: bold;
 }
+#topbar {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  background: #020617;
+}
+input, select {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  background: #1e293b;
+  color: white;
+}
 #container {
   display: flex;
-  height: calc(100vh - 50px);
+  height: calc(100vh - 100px);
 }
 #channels {
   width: 35%;
-  background: #020617;
   overflow-y: auto;
+  background: #020617;
 }
 .channel {
-  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
   border-bottom: 1px solid #1e293b;
   cursor: pointer;
+}
+.channel img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  background: black;
 }
 .channel:hover {
   background: #1e293b;
 }
 #player {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: black;
 }
 video {
   width: 100%;
   height: 100%;
-  background: black;
 }
 @media(max-width:768px){
   #container { flex-direction: column; }
-  #channels { width: 100%; height: 40%; }
+  #channels { width: 100%; height: 45%; }
 }
 </style>
 </head>
@@ -60,54 +80,85 @@ video {
 
 <header>📺 Canlı TV</header>
 
+<div id="topbar">
+  <input id="search" placeholder="Kanal ara">
+  <select id="category">
+    <option value="all">Tümü</option>
+    <option value="TR">TR</option>
+    <option value="Spor">Spor</option>
+    <option value="Haber">Haber</option>
+  </select>
+</div>
+
 <div id="container">
   <div id="channels"></div>
   <div id="player">
-    <video id="video" controls autoplay></video>
+    <video id="video" controls playsinline></video>
   </div>
 </div>
 
 <script>
 const video = document.getElementById("video");
+const list = document.getElementById("channels");
 let hls;
+let channels = [];
 
 fetch("FR-TR-06032026.m3u")
-  .then(res => res.text())
-  .then(data => {
-    const lines = data.split("\n");
-    let name = "";
+.then(r => r.text())
+.then(data => parseM3U(data));
 
-    lines.forEach(line => {
-      line = line.trim();
-      if (line.startsWith("#EXTINF")) {
-        name = line.split(",")[1];
-      } 
-      else if (line.startsWith("http")) {
-        addChannel(name, line);
-      }
-    });
+function parseM3U(data){
+  let lines = data.split("\n");
+  let ch = {};
+  lines.forEach(l=>{
+    l = l.trim();
+    if(l.startsWith("#EXTINF")){
+      ch = {};
+      ch.name = l.split(",")[1] || "Kanal";
+      ch.logo = (l.match(/tvg-logo="(.*?)"/)||[])[1] || "";
+      ch.group = (l.match(/group-title="(.*?)"/)||[])[1] || "Diğer";
+    }
+    else if(l.startsWith("http")){
+      ch.url = l;
+      channels.push(ch);
+    }
   });
-
-function addChannel(name, url) {
-  const div = document.createElement("div");
-  div.className = "channel";
-  div.textContent = name || "Kanal";
-  div.onclick = () => play(url);
-  document.getElementById("channels").appendChild(div);
+  render();
 }
 
-function play(url) {
-  if (hls) hls.destroy();
+function render(){
+  list.innerHTML="";
+  const q = search.value.toLowerCase();
+  const cat = category.value;
 
-  if (video.canPlayType("application/vnd.apple.mpegurl")) {
-    video.src = url;
-  } else if (Hls.isSupported()) {
-    hls = new Hls();
+  channels.filter(c=>{
+    return (!q || c.name.toLowerCase().includes(q)) &&
+           (cat==="all" || c.group.includes(cat));
+  }).forEach(c=>{
+    const d=document.createElement("div");
+    d.className="channel";
+    d.innerHTML=`
+      <img src="${c.logo || 'https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg'}">
+      <div>${c.name}</div>`;
+    d.onclick=()=>play(c.url);
+    list.appendChild(d);
+  });
+}
+
+search.oninput = category.onchange = render;
+
+function play(url){
+  if(hls) hls.destroy();
+  if(video.canPlayType("application/vnd.apple.mpegurl")){
+    video.src=url;
+  } else if(Hls.isSupported()){
+    hls=new Hls();
     hls.loadSource(url);
     hls.attachMedia(video);
   } else {
-    alert("Tarayıcı desteklemiyor");
+    alert("Desteklenmiyor");
   }
+  video.play();
 }
 </script>
 
