@@ -2,76 +2,113 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<title>Canlı TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Canlı TV Player</title>
 
-<link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet">
-<script src="https://vjs.zencdn.net/8.5.2/video.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
-body{
-    margin:0;
-    background:#000;
-    color:#fff;
-    font-family:Arial;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: white;
 }
-header{
-    padding:12px;
-    background:#1a73e8;
-    text-align:center;
-    font-size:20px;
+header {
+  padding: 12px;
+  text-align: center;
+  background: #020617;
+  font-size: 20px;
+  font-weight: bold;
 }
-#player{
-    width:100%;
-    max-height:60vh;
+#container {
+  display: flex;
+  height: calc(100vh - 50px);
 }
-.channel{
-    padding:12px;
-    border-bottom:1px solid #222;
-    cursor:pointer;
+#channels {
+  width: 35%;
+  background: #020617;
+  overflow-y: auto;
 }
-.channel:hover{
-    background:#111;
+.channel {
+  padding: 12px;
+  border-bottom: 1px solid #1e293b;
+  cursor: pointer;
+}
+.channel:hover {
+  background: #1e293b;
+}
+#player {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+video {
+  width: 100%;
+  height: 100%;
+  background: black;
+}
+@media(max-width:768px){
+  #container { flex-direction: column; }
+  #channels { width: 100%; height: 40%; }
 }
 </style>
 </head>
 
 <body>
 
-<header>📺 Canlı TV (M3U)</header>
+<header>📺 Canlı TV</header>
 
-<video id="player" class="video-js vjs-default-skin" controls autoplay></video>
-
-<div id="list"></div>
+<div id="container">
+  <div id="channels"></div>
+  <div id="player">
+    <video id="video" controls autoplay></video>
+  </div>
+</div>
 
 <script>
-const channels = [
-    {
-        name: "ATV",
-        url: "PUT_M3U8_URL_HERE"
-    }
-];
+const video = document.getElementById("video");
+let hls;
 
-const player = videojs("player");
+fetch("FR-TR-06032026.m3u")
+  .then(res => res.text())
+  .then(data => {
+    const lines = data.split("\n");
+    let name = "";
 
-function play(url){
-    if(Hls.isSupported()){
-        const hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(player.tech().el());
-    }else{
-        player.src({src:url,type:"application/x-mpegURL"});
-    }
+    lines.forEach(line => {
+      line = line.trim();
+      if (line.startsWith("#EXTINF")) {
+        name = line.split(",")[1];
+      } 
+      else if (line.startsWith("http")) {
+        addChannel(name, line);
+      }
+    });
+  });
+
+function addChannel(name, url) {
+  const div = document.createElement("div");
+  div.className = "channel";
+  div.textContent = name || "Kanal";
+  div.onclick = () => play(url);
+  document.getElementById("channels").appendChild(div);
 }
 
-channels.forEach(c=>{
-    const div=document.createElement("div");
-    div.className="channel";
-    div.innerText=c.name;
-    div.onclick=()=>play(c.url);
-    document.getElementById("list").appendChild(div);
-});
+function play(url) {
+  if (hls) hls.destroy();
+
+  if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    video.src = url;
+  } else if (Hls.isSupported()) {
+    hls = new Hls();
+    hls.loadSource(url);
+    hls.attachMedia(video);
+  } else {
+    alert("Tarayıcı desteklemiyor");
+  }
+}
 </script>
 
 </body>
