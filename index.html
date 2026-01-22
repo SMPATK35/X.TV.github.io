@@ -5,159 +5,73 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Canlı TV Player</title>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet">
+<script src="https://vjs.zencdn.net/8.5.2/video.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
 body{
     margin:0;
-    font-family:Arial,Helvetica,sans-serif;
-    background:#0f0f0f;
+    background:#000;
     color:#fff;
+    font-family:Arial;
 }
-
 header{
+    padding:12px;
     background:#1a73e8;
-    padding:15px;
     text-align:center;
-    font-size:22px;
-    font-weight:bold;
+    font-size:20px;
 }
-
-.container{
-    padding:15px;
-}
-
-/* PLAYER */
-.player-wrapper{
-    background:#000;
-    border-radius:12px;
-    overflow:hidden;
-}
-
-.player-screen{
-    position:relative;
+#player{
     width:100%;
-    height:56.25vw;
-    max-height:500px;
-    background:#000;
+    max-height:60vh;
 }
-
-#streamContainer iframe{
-    width:100%;
-    height:100%;
-    border:none;
-}
-
-#placeholder{
-    position:absolute;
-    inset:0;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    color:#888;
-    font-size:18px;
-}
-
-#placeholder i{
-    font-size:64px;
-    margin-bottom:10px;
-}
-
-/* BUTTONS */
-.section{
-    margin-top:20px;
-}
-
-.section h2{
-    margin:10px 0;
-    font-size:18px;
-}
-
-.buttons{
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-}
-
-button{
-    padding:12px 16px;
-    border:none;
-    border-radius:8px;
-    background:#1a73e8;
-    color:#fff;
-    font-size:15px;
+.channel{
+    padding:12px;
+    border-bottom:1px solid #222;
     cursor:pointer;
 }
-
-button:active{
-    transform:scale(0.97);
-}
-
-/* FOOTER */
-footer{
-    text-align:center;
-    padding:10px;
-    font-size:12px;
-    color:#666;
+.channel:hover{
+    background:#111;
 }
 </style>
 </head>
 
 <body>
 
-<header>📺 Canlı TV Player</header>
+<header>📺 Canlı TV (M3U)</header>
 
-<div class="container">
+<video id="player" class="video-js vjs-default-skin" controls autoplay></video>
 
-    <div class="player-wrapper">
-        <div class="player-screen">
-            <div id="placeholder">
-                <i class="fas fa-play-circle"></i>
-                <div>Kanal seç</div>
-            </div>
-            <div id="streamContainer"></div>
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>SPOR</h2>
-        <div class="buttons">
-            <button onclick="loadChannel(62,'beIN SPORTS 1')">beIN SPORTS 1</button>
-            <button onclick="loadChannel(63,'beIN SPORTS 2')">beIN SPORTS 2</button>
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>ULUSAL</h2>
-        <div class="buttons">
-            <button onclick="loadChannel(1000,'ATV')">ATV</button>
-            <button onclick="loadChannel(1001,'KANAL D')">KANAL D</button>
-        </div>
-    </div>
-
-</div>
-
-<footer>
-    GitHub Pages uyumlu • Mobil destekli
-</footer>
+<div id="list"></div>
 
 <script>
-function loadChannel(id,name){
-    const placeholder = document.getElementById("placeholder");
-    const container = document.getElementById("streamContainer");
+const channels = [
+    {
+        name: "ATV",
+        url: "PUT_M3U8_URL_HERE"
+    }
+];
 
-    placeholder.style.display = "none";
-    container.innerHTML = "";
+const player = videojs("player");
 
-    const iframe = document.createElement("iframe");
-    iframe.src = "https://daddyhd.com/stream/stream-" + id + ".php";
-    iframe.allow = "autoplay; fullscreen; picture-in-picture";
-    iframe.allowFullscreen = true;
-    iframe.setAttribute("playsinline","true");
-
-    container.appendChild(iframe);
+function play(url){
+    if(Hls.isSupported()){
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(player.tech().el());
+    }else{
+        player.src({src:url,type:"application/x-mpegURL"});
+    }
 }
+
+channels.forEach(c=>{
+    const div=document.createElement("div");
+    div.className="channel";
+    div.innerText=c.name;
+    div.onclick=()=>play(c.url);
+    document.getElementById("list").appendChild(div);
+});
 </script>
 
 </body>
